@@ -180,45 +180,30 @@ function castVote(charIndex, valueIndex) {
 
 function updateVotes() {
 
-    const nullVotes = [];
-
     gameInfo.getVotes().forEach((vote, index) => {
+
         if (vote == null) {
-            nullVotes.push(index);
+            for (let i=0; i<3; i++) {
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
+            }
+        }
+        else {
+            for (let i=0; i<3; i++) {
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
+            }
+            document.getElementById('vote-' + index + '-' + vote).className = 'fmk-btn';
         }
     });
 
-    if ( nullVotes.length == 0 ) {
+    const uuid = window.localStorage.getItem('uuid');
+    const votePayload = {
+        type: 'vote',
+        uuid: uuid,
+        votes: gameInfo.getVotes()
+    };
 
-       //gameInfo.updateVote(nullVotes[0], [0, 1, 2].filter(x => !gameInfo.getVotes().includes(x))[0]);
-        //updateVotes();
-        // Test payload matching server criteria
-        const uuid = window.localStorage.getItem('uuid');
-        const votePayload = {
-            type: 'vote',
-            uuid: uuid,
-            votes: gameInfo.getVotes()
-        };
-
-        // Send payload as a JSON string
-        socket.send(JSON.stringify(votePayload));
-    }
-    else {
-        gameInfo.getVotes().forEach((vote, index) => {
-
-            if (vote == null) {
-                for (let i=0; i<3; i++) {
-                    document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
-                }
-            }
-            else {
-                for (let i=0; i<3; i++) {
-                    document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
-                }
-                document.getElementById('vote-' + index + '-' + vote).className = 'fmk-btn';
-            }
-        });
-    }
+    // Send payload as a JSON string
+    socket.send(JSON.stringify(votePayload));
 }
 
 function renderContent(payload) {
