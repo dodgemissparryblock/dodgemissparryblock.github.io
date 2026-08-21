@@ -163,10 +163,6 @@ const gameInfo = function () {
 
 function castVote(charIndex, valueIndex) {
 
-    if (valueIndex == gameInfo.getVotes()[charIndex]) {
-        return;
-    }
-
     let voteAvailable = true;
 
     gameInfo.getVotes().forEach((vote, index) => {
@@ -192,7 +188,7 @@ function updateVotes() {
         }
     });
 
-    if ( false && nullVotes.length == 1 ) {
+    if ( nullVotes.length == 0 ) {
 
         gameInfo.updateVote(nullVotes[0], [0, 1, 2].filter(x => !gameInfo.getVotes().includes(x))[0]);
         updateVotes();
