@@ -173,22 +173,23 @@ function castVote(charIndex, valueIndex) {
 
     updatedVotes = updatedVotes.map((x, index) => {
 
+        for (let i=0; i<3; i++) {
+
+            document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
+        }
+
         if ( x == valueIndex ) {
-
-            for (let i=0; i<3; i++) {
-
-                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
-            }
 
             return null;
         }
 
+        if (index !== charIndex) {
+        
+            document.getElementById('vote-' + index + '-' + x).className = 'fmk-btn';
+        }
+
         return x;
     });
-
-    for (let i=0; i<3; i++) {
-        document.getElementById('vote-' + charIndex + '-' + i).className = 'fmk-btn op';
-    }
     
     document.getElementById('vote-' + charIndex + '-' + valueIndex).className = 'fmk-btn';
     updatedVotes[charIndex] = valueIndex;
