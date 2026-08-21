@@ -293,6 +293,7 @@ function renderContent(payload) {
     });
 
     if (displayNextButton) {
+
         document.getElementById('nxt-btn').style.display = displayNextButton ? '' : 'none';
     }
 
@@ -300,7 +301,7 @@ function renderContent(payload) {
         lockIn(false);
     }
 
-    updateVotes();
+    
 }
 
 // --------------------------------------------------
