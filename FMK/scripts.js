@@ -190,8 +190,8 @@ function updateVotes() {
 
     if ( nullVotes.length == 0 ) {
 
-        gameInfo.updateVote(nullVotes[0], [0, 1, 2].filter(x => !gameInfo.getVotes().includes(x))[0]);
-        updateVotes();
+       //gameInfo.updateVote(nullVotes[0], [0, 1, 2].filter(x => !gameInfo.getVotes().includes(x))[0]);
+        //updateVotes();
         // Test payload matching server criteria
         const uuid = window.localStorage.getItem('uuid');
         const votePayload = {
