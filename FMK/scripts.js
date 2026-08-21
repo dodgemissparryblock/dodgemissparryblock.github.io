@@ -3,7 +3,8 @@
 */
 
 // 1. Establish connection to the server
-const socket = new WebSocket('wss://anthrathesly.ddns.net/wss/');
+//const socket = new WebSocket('wss://anthrathesly.ddns.net/wss/');
+const socket = new WebSocket('ws://127.0.0.1:8111');
 const sockStatus = function () {
     const self = {
         isReady: false,
@@ -27,7 +28,9 @@ const sockStatus = function () {
 
 // 2. Event listener for when connection opens
 socket.addEventListener('open', (event) => {
+
     console.log('Connected to WebSocket server!');
+
     if (sockStatus.isLoaded()) {
         doValidate();
     }
@@ -36,10 +39,12 @@ socket.addEventListener('open', (event) => {
 
 // 3. Listen for incoming broadcasts from other users
 socket.addEventListener('message', (event) => {
-    console.log('Received message from server:', event.data);
-    try {
-        const data = JSON.parse(event.data);
 
+    console.log('Received Message');
+
+    try {
+
+        const data = JSON.parse(event.data);
         const username = localStorage.getItem('username');
 
         if (data.event == 'user_connected' && data.username == username) {
@@ -49,23 +54,40 @@ socket.addEventListener('message', (event) => {
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('game-container').style.display = '';
         }
+        else if (data.event == 'logout') {
+
+            localStorage.setItem('uuid', '');
+            localStorage.setItem('username', '');
+
+            location.reload();
+        }
         else if (data.event == 'update') {
 
             renderContent(JSON.stringify(data.payload));
         }
+        else if (data.event == 'refresh') {
+
+            refreshResults(JSON.stringify(data.payload));
+        }
     }
     catch (e) {
-        //ignore for now
+        console.log(e);
     }
 });
 
 // 4. Handle errors and disconnection
 socket.addEventListener('error', (event) => {
     console.error('WebSocket Error:', event);
+    setTimeout(() => {
+        location.reload();
+    }, 60000);
 });
 
 socket.addEventListener('close', () => {
     console.log('Connection closed.');
+    setTimeout(() => {
+        location.reload();
+    }, 60000);
 });
 
 function doValidate() {
@@ -90,10 +112,12 @@ function doLogin() {
 
     const password = document.getElementById('serverPassword').value.trim();
     const username = document.getElementById('displayName').value.trim();
+    const clave = document.getElementById('clave').value.trim();
 
+    document.getElementById('clave').value = '';
     document.getElementById('serverPassword').value = '';
 
-    if (!password || !username) {
+    if (!password || !clave || !username) {
         return;
     }
 
@@ -103,7 +127,8 @@ function doLogin() {
     const authPayload = {
         type: 'auth',
         password: password,
-        username: username
+        username: username,
+        clave: clave
     };
 
     // Send payload as a JSON string
@@ -120,6 +145,7 @@ const voteValues = ['💋 Fuck', '💍 Marry', '💀 KILL'];
 // --------------------------------------------------
 
 function lockIn(updateServer) {
+
     document.getElementById('gameGrid').style.display = 'none';
     document.getElementById('nxt-btn').style.display = 'none';
 
@@ -136,120 +162,55 @@ function lockIn(updateServer) {
     socket.send(JSON.stringify(lockPayload));
 }
 
-const gameInfo = function () {
-    const self = {
-        round: 0,
-        votes: []
-    }
-    return {
-        set: function (round, resultString) {
-            if (round == self.round) {
-                return true;
-            }
-            const results = JSON.parse(resultString);
-            self.round = round;
-            const username = localStorage.getItem('username');
-            self.votes = results.find(x => x.player = username)?.votes || [];
-            return false;
-        },
-        getVotes: function () {
-            return self.votes;
-        },
-        updateVote: function (index, value) {
-            self.votes[index] = value;
-        }
-    }
-}();
-
 function castVote(charIndex, valueIndex) {
 
-    let voteAvailable = true;
+    let updatedVotes = [...currentVotes];
 
-    gameInfo.getVotes().forEach((vote, index) => {
+    if (valueIndex == updatedVotes[charIndex]) {
+        console.log('*ignore*');
+        return;
+    }
 
-        if (index != charIndex) {
-            if (vote == valueIndex) {
-                gameInfo.updateVote(index, null);
-            }
-        }
-    });
+    updatedVotes = updatedVotes.map((x, index) => {
 
-    gameInfo.updateVote(charIndex, valueIndex);
-    updateVotes();
-}
+        if ( x == valueIndex ) {
 
-function updateVotes() {
-
-    gameInfo.getVotes().forEach((vote, index) => {
-
-        if (vote == null) {
             for (let i=0; i<3; i++) {
+
                 document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
             }
+
+            return null;
         }
-        else {
-            for (let i=0; i<3; i++) {
-                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
-            }
-            document.getElementById('vote-' + index + '-' + vote).className = 'fmk-btn';
-        }
+
+        return x;
     });
+
+    document.getElementById('vote-' + charIndex + '-' + valueIndex).className = 'fmk-btn';
+    updatedVotes[charIndex] = valueIndex;
+
+console.log('Updated: ');
+console.log(updatedVotes);
+
+    currentVotes = [...updatedVotes];
 
     const uuid = window.localStorage.getItem('uuid');
     const votePayload = {
         type: 'vote',
         uuid: uuid,
-        votes: gameInfo.getVotes()
+        votes: updatedVotes
     };
 
     // Send payload as a JSON string
     socket.send(JSON.stringify(votePayload));
 }
 
-function renderContent(payload) {
+function refreshResults(payload) {
 
-    const data = JSON.parse(payload);
+    console.log('*refreshing table*');
 
-    // 1. Render Round Title
-    document.getElementById("roundTitle").textContent = `Round ${data.round}`;
+    const results = JSON.parse(payload);
 
-    // 2. Render Character Grid
-    const gameGrid = document.getElementById("gameGrid");
-    gameGrid.innerHTML = ""; // Clear existing content
-
-    gameInfo.set(data.round, JSON.stringify(data.results));
-
-    gameGrid.style.display = '';
-    document.getElementById('nxt-btn').style.display = 'none';
-
-    data.characters.forEach((char, charIndex) => {
-        const col = document.createElement("div");
-        col.className = "character-column";
-        // Generate F, M, K buttons dynamically and set 'op' class if not selected
-        const buttonsHTML = voteValues.map((label, index) => {
-            return `<button id="vote-${charIndex}-${index}" onclick="castVote(${charIndex}, ${index})" class="fmk-btn">${label}</button>`;
-        }).join("");
-
-        const keyWord = char.name.replace(/"([^"]*)"/g, ''); 
-
-        col.innerHTML = `
-            <div class="img-container">
-                <img src="${char.image}" alt="${char.name}"/>
-            </div>
-            <div class="info-box title">
-                <a href="#" onclick="googlemethis('${encodeURIComponent(keyWord) + ' ' + encodeURIComponent(char.sourceName)} fanservice')">${char.name}</a>
-            </div>
-            <div class="info-box subtitle">
-                <a href="${char.sourceURL}" target="_new">${char.sourceName}</a>
-            </div>
-            <div class="button-group">
-                ${buttonsHTML}
-            </div>
-        `;
-
-        gameGrid.appendChild(col);
-    });
-    console.log('render table');
     // 3. Render Results Table Header
     const tableHeader = document.getElementById("tableHeader");
     let headerHTML = `<th>Player</th>`;
@@ -268,14 +229,16 @@ function renderContent(payload) {
 
     const username = localStorage.getItem('username');
 
-    data.results.forEach(res => {
+    results.forEach(res => {
 
         const tr = document.createElement("tr");
 
         let rowHTML = `<td><b>${res.player}</b></td>`;
 
-        res.votes.forEach(charID => {
-            rowHTML += `<td><div class="icon">${charID === null ? '-' : '<img class="icon" src="' + data.characters[charID].image + '"/>'}</div></td>`;
+        const sorted = [0, 1, 2].map(charIndex => res.votes.indexOf(charIndex) > -1 ? res.votes.indexOf(charIndex) : null);
+
+        sorted.forEach(charIndex => {
+            rowHTML += `<td><div class="icon">${charIndex === null ? '-' : '<img class="icon" src="' + data.characters[charIndex].image + '"/>'}</div></td>`;
         });
 
         rowHTML += `<td><b>${ res.status == 2 ? '➡️' : res.status == 1 ? '✅' : '⏳' }</b></td>`;
@@ -293,15 +256,104 @@ function renderContent(payload) {
     });
 
     if (displayNextButton) {
-
         document.getElementById('nxt-btn').style.display = displayNextButton ? '' : 'none';
     }
 
     if (shouldLockIn) {
         lockIn(false);
     }
+}
 
-    
+var currentVotes = [null, null, null];
+
+var data = {};
+
+function renderContent(payload) {
+
+    console.log('Rendering Content');
+
+    data = JSON.parse(payload);
+
+    currentVotes = [null, null, null];
+    document.getElementById("roundTitle").textContent = `Round ${data.round}`;
+
+    const gameGrid = document.getElementById("gameGrid");
+    gameGrid.replaceChildren();
+
+    gameGrid.style.display = '';
+    document.getElementById('nxt-btn').style.display = 'none';
+
+    data.characters.forEach((char, charIndex) => {
+
+        const col = document.createElement("div");
+
+        col.className = 'character-column';
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'img-container';
+
+        const image = new Image();
+        image.src = char.image;
+        image.alt = char.name;
+
+        imageContainer.appendChild(image);
+        col.appendChild(imageContainer);
+
+        const titleContainer = document.createElement("div");
+        titleContainer.className = 'info-box title';
+
+        const titleButton = document.createElement("button");
+        titleButton.textContent = char.name;
+        titleButton.className = 'linkedin';
+        titleButton.dataset.name = char.name;
+        titleButton.dataset.sourceName = char.sourceName;
+        titleButton.alt = char.name;
+        titleButton.title = char.name;
+        titleButton.addEventListener('click', function (event) {
+            const keyWord = event.target.dataset.name.replace(/"([^"]*)"/g, '').replace(/[^a-zA-Z0-9]/g, " ").trim(); 
+            googlemethis(encodeURIComponent( keyWord + ' fanservice') );
+        });
+        titleContainer.appendChild(titleButton);
+        col.appendChild(titleContainer);
+
+        const subTitleContainer = document.createElement("div");
+        subTitleContainer.className = 'info-box subtitle';
+
+        const subTitleButton = document.createElement("button");
+        subTitleButton.textContent = char.sourceName;
+        subTitleButton.alt = char.sourceName;
+        subTitleButton.title = char.sourceName;
+        subTitleButton.className = 'linkedin';
+        subTitleButton.dataset.sourceURL = char.sourceURL;
+        subTitleButton.addEventListener('click', function (event) {
+            window.open(event.target.dataset.sourceURL, '_new');
+        });
+        subTitleContainer.appendChild(subTitleButton);
+        col.appendChild(subTitleContainer);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = 'button-group';
+
+        voteValues.forEach((label, valueIndex) => {
+
+            const button = document.createElement("button");
+
+            button.dataset.charIndex = charIndex;
+            button.dataset.valueIndex = valueIndex;
+
+            button.textContent = label;
+            button.id = 'vote-' + charIndex + '-' + valueIndex;
+            button.className = 'fmk-btn';
+            button.addEventListener('click', function (event) {
+                castVote(parseInt(event.target.dataset.charIndex + '', 10), parseInt(event.target.dataset.valueIndex + '', 10));
+            });
+
+            buttonGroup.appendChild(button);
+        });
+
+        col.appendChild(buttonGroup);
+        gameGrid.appendChild(col);
+    });
 }
 
 // --------------------------------------------------
