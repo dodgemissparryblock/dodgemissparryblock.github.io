@@ -177,7 +177,7 @@ function castVote(charIndex, valueIndex) {
 
             for (let i=0; i<3; i++) {
 
-                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
             }
 
             return null;
@@ -186,6 +186,10 @@ function castVote(charIndex, valueIndex) {
         return x;
     });
 
+    for (let i=0; i<3; i++) {
+        document.getElementById('vote-' + charIndex + '-' + i).className = 'fmk-btn op';
+    }
+    
     document.getElementById('vote-' + charIndex + '-' + valueIndex).className = 'fmk-btn';
     updatedVotes[charIndex] = valueIndex;
 
