@@ -192,7 +192,7 @@ function updateVotes() {
         }
     });
 
-    if ( nullVotes.length == 1 ) {
+    if ( false && nullVotes.length == 1 ) {
 
         gameInfo.updateVote(nullVotes[0], [0, 1, 2].filter(x => !gameInfo.getVotes().includes(x))[0]);
         updateVotes();
