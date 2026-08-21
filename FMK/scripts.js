@@ -173,21 +173,32 @@ function castVote(charIndex, valueIndex) {
 
     updatedVotes = updatedVotes.map((x, index) => {
 
-        for (let i=0; i<3; i++) {
-
-            document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
-        }
-
         if ( x == valueIndex ) {
+
+            for (let i=0; i<3; i++) {
+    
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
+            }
 
             return null;
         }
 
-        if (index !== charIndex && x !== null) {
-        
+        if (index === charIndex) {
+            for (let i=0; i<3; i++) {
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
+            }
+        }
+        else if (x === null) {
+            for (let i=0; i<3; i++) {
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
+            }
+        }
+        else {
+            for (let i=0; i<3; i++) {
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
+            }
             document.getElementById('vote-' + index + '-' + x).className = 'fmk-btn';
         }
-
         return x;
     });
     
