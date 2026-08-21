@@ -177,7 +177,7 @@ function castVote(charIndex, valueIndex) {
 
             for (let i=0; i<3; i++) {
 
-                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn';
+                document.getElementById('vote-' + index + '-' + i).className = 'fmk-btn op';
             }
 
             return null;
@@ -189,8 +189,24 @@ function castVote(charIndex, valueIndex) {
     document.getElementById('vote-' + charIndex + '-' + valueIndex).className = 'fmk-btn';
     updatedVotes[charIndex] = valueIndex;
 
-console.log('Updated: ');
-console.log(updatedVotes);
+    const nullVotes = updatedVotes.reduce( (acumulator, currentValue, index) => {
+        if (currentValue == null) {
+            acumulator.push(index);
+        }
+        return acumulator;
+    }, []);
+
+    if ( nullVotes.length === 1 ) {
+
+        const indexToUpdate = nullVotes[0];
+        const valueToUpdate = [0, 1, 2].filter( val => !updatedVotes.includes(val) )[0];
+        updatedVotes[indexToUpdate] = valueToUpdate;
+
+        for (let i=0; i<3; i++) {
+            document.getElementById('vote-' + indexToUpdate + '-' + i).className = 'fmk-btn op';
+        }
+        document.getElementById('vote-' + indexToUpdate + '-' + valueToUpdate).className = 'fmk-btn';
+    }
 
     currentVotes = [...updatedVotes];
 
