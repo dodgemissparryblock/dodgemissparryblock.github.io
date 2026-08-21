@@ -249,12 +249,14 @@ function renderContent(payload) {
             return `<button id="vote-${charIndex}-${index}" onclick="castVote(${charIndex}, ${index})" class="fmk-btn">${label}</button>`;
         }).join("");
 
+        const keyWord = char.name.replace(/"([^"]*)"/g, ''); 
+
         col.innerHTML = `
             <div class="img-container">
                 <img src="${char.image}" alt="${char.name}"/>
             </div>
             <div class="info-box title">
-                <a href="#" onclick="googlemethis('${encodeURIComponent(char.name) + ' ' + encodeURIComponent(char.sourceName)} fanservice')">${char.name}</a>
+                <a href="#" onclick="googlemethis('${encodeURIComponent(keyWord) + ' ' + encodeURIComponent(char.sourceName)} fanservice')">${char.name}</a>
             </div>
             <div class="info-box subtitle">
                 <a href="${char.sourceURL}" target="_new">${char.sourceName}</a>
