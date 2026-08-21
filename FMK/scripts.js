@@ -3,8 +3,8 @@
 */
 
 // 1. Establish connection to the server
-//const socket = new WebSocket('wss://anthrathesly.ddns.net/wss/');
-const socket = new WebSocket('ws://127.0.0.1:8111');
+const socket = new WebSocket('wss://anthrathesly.ddns.net/wss/');
+//const socket = new WebSocket('ws://127.0.0.1:8111');
 const sockStatus = function () {
     const self = {
         isReady: false,
