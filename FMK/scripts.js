@@ -183,7 +183,7 @@ function castVote(charIndex, valueIndex) {
             return null;
         }
 
-        if (index !== charIndex) {
+        if (index !== charIndex && x !== null) {
         
             document.getElementById('vote-' + index + '-' + x).className = 'fmk-btn';
         }
